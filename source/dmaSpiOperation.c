@@ -33,6 +33,9 @@
  * @brief   Application entry point.
  */
 #include <stdio.h>
+#include "FreeRTOSConfig.h"
+#include "FreeRTOS.h"
+#include "task.h"
 
 #include "board.h"
 #include "peripherals.h"
@@ -41,19 +44,92 @@
 #include "MK64F12.h"
 #include "fsl_dmamux.h"
 #include "fsl_dspi.h"
-#include "FreeRTOSConfig.h"
-#include "FreeRTOS.h"
-#include "task.h"
+#include "fsl_ftm.h"
+#include "fsl_edma.h"
+#include "fsl_dmamux.h"
 
 #define PRINTF printf
+#define BUFF_LENGTH 4U
 
 
-/* TODO: insert other include files here. */
+/**
+ * IRQ handler for Pilot Cntl oscillation
+ *
+ * @TODO @@@TSB when the pin is moved to a FTM allocated pin, this IRQ handler will not be needed
+ */
+void IRQ_PILOT_CNTL_FTM_HANDLER(void)
+{
+#define FTM_CHANNEL_FLAG kFTM_Chnl0Flag
 
-/* TODO: insert other definitions and declarations here. */
+    if ((FTM_GetStatusFlags(PILOT_CNTL_FTM_BASEADDR) & FTM_CHANNEL_FLAG) == FTM_CHANNEL_FLAG)
+    {
+        /* Clear interrupt flag.*/
+        FTM_ClearStatusFlags(PILOT_CNTL_FTM_BASEADDR, FTM_CHANNEL_FLAG);
+    }
+
+    GPIO_TogglePinsOutput(PILOT_CNTL_GPIO, 1U << PILOT_CNTL_GPIO_PIN); /**< Toggle the Pilot Cntl pin */
+}
+
+void IRQ_MCP3911_OSC_FTM_HANDLER(void)
+{
+#define FTM_CHANNEL_FLAG kFTM_Chnl0Flag
+
+    if ((FTM_GetStatusFlags(MCP3911_OSC_FTM_BASEADDR) & FTM_CHANNEL_FLAG) == FTM_CHANNEL_FLAG)
+    {
+        /* Clear interrupt flag.*/
+        FTM_ClearStatusFlags(MCP3911_OSC_FTM_BASEADDR, FTM_CHANNEL_FLAG);
+    }
+
+}
+
+edma_handle_t g_EDMA_Handle;
+volatile bool g_Transfer_Done = false;
+
+/*******************************************************************************
+ * Code
+ ******************************************************************************/
+
+/* User callback function for EDMA transfer. */
+void EDMA_Callback(edma_handle_t *handle, void *param, bool transferDone, uint32_t tcds)
+{
+    if (transferDone)
+    {
+        g_Transfer_Done = true;
+    }
+}
 
 static void master_task(void *pvParameters)
 {
+    uint32_t srcAddr[BUFF_LENGTH] = {0x01, 0x02, 0x03, 0x04};
+    uint32_t destAddr[BUFF_LENGTH] = {0x00, 0x00, 0x00, 0x00};
+
+    edma_transfer_config_t transferConfig;
+    edma_config_t userConfig;
+
+    /* Configure DMAMUX */
+    DMAMUX_Init(DMAMUX0);
+    DMAMUX_SetSource(DMAMUX0, 0, 63);
+    DMAMUX_EnableChannel(DMAMUX0, 0);
+    /* Configure EDMA one shot transfer */
+    /*
+     * userConfig.enableRoundRobinArbitration = false;
+     * userConfig.enableHaltOnError = true;
+     * userConfig.enableContinuousLinkMode = false;
+     * userConfig.enableDebugMode = false;
+     */
+    EDMA_GetDefaultConfig(&userConfig);
+    EDMA_Init(DMA0, &userConfig);
+    EDMA_CreateHandle(&g_EDMA_Handle, DMA0, 0);
+    EDMA_SetCallback(&g_EDMA_Handle, EDMA_Callback, NULL);
+    EDMA_PrepareTransfer(&transferConfig, srcAddr, sizeof(srcAddr[0]), destAddr, sizeof(destAddr[0]),
+                         sizeof(srcAddr[0]), sizeof(srcAddr), kEDMA_MemoryToMemory);
+    EDMA_SubmitTransfer(&g_EDMA_Handle, &transferConfig);
+    EDMA_StartTransfer(&g_EDMA_Handle);
+    /* Wait for EDMA transfer finish */
+    while (g_Transfer_Done != true)
+    {
+    }
+
 
 	while(1)
 	{
@@ -69,9 +145,9 @@ static void master_task(void *pvParameters)
 int main(void) {
 
   	/* Init board hardware. */
-    BOARD_InitBootPins();
-    BOARD_InitBootClocks();
-    BOARD_InitBootPeripherals();
+	BOARD_InitPins();
+	BOARD_BootClockRUN();
+	BOARD_InitBootPeripherals();
   	/* Init FSL debug console. */
     BOARD_InitDebugConsole();
 

@@ -64,12 +64,6 @@ extern "C" {
  */
 void BOARD_InitPins(void);
 
-/*!
- * @brief Calls initialization functions.
- *
- */
-void BOARD_InitBootPins(void);
-
 #if defined(__cplusplus)
 }
 #endif

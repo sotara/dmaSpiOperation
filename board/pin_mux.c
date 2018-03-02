@@ -44,9 +44,38 @@ PinsProfile:
 #include "pin_mux.h"
 
 
+#define PIN0_IDX                         0u   /*!< Pin number for pin 0 in a port */
+#define PIN1_IDX                         1u   /*!< Pin number for pin 1 in a port */
+#define PIN2_IDX                         2u   /*!< Pin number for pin 2 in a port */
+#define PIN3_IDX                         3u   /*!< Pin number for pin 3 in a port */
+#define PIN4_IDX                         4u   /*!< Pin number for pin 4 in a port */
+#define PIN5_IDX                         5u   /*!< Pin number for pin 5 in a port */
+#define PIN6_IDX                         6u   /*!< Pin number for pin 6 in a port */
+#define PIN7_IDX                         7u   /*!< Pin number for pin 7 in a port */
+#define PIN8_IDX                         8u   /*!< Pin number for pin 8 in a port */
+#define PIN9_IDX                         9u   /*!< Pin number for pin 9 in a port */
+#define PIN10_IDX                       10u   /*!< Pin number for pin 10 in a port */
+#define PIN11_IDX                       11u   /*!< Pin number for pin 11 in a port */
+#define PIN12_IDX                       12u   /*!< Pin number for pin 12 in a port */
+#define PIN13_IDX                       13u   /*!< Pin number for pin 13 in a port */
+#define PIN14_IDX                       14u   /*!< Pin number for pin 14 in a port */
+#define PIN15_IDX                       15u   /*!< Pin number for pin 15 in a port */
 #define PIN16_IDX                       16u   /*!< Pin number for pin 16 in a port */
-
 #define PIN17_IDX                       17u   /*!< Pin number for pin 17 in a port */
+#define PIN18_IDX                       18u   /*!< Pin number for pin 18 in a port */
+#define PIN19_IDX                       19u   /*!< Pin number for pin 19 in a port */
+#define PIN20_IDX                       20u   /*!< Pin number for pin 20 in a port */
+#define PIN21_IDX                       21u   /*!< Pin number for pin 21 in a port */
+#define PIN22_IDX                       22u   /*!< Pin number for pin 22 in a port */
+#define PIN23_IDX                       23u   /*!< Pin number for pin 23 in a port */
+#define PIN24_IDX                       24u   /*!< Pin number for pin 24 in a port */
+#define PIN25_IDX                       25u   /*!< Pin number for pin 25 in a port */
+#define PIN26_IDX                       26u   /*!< Pin number for pin 26 in a port */
+#define PIN27_IDX                       27u   /*!< Pin number for pin 27 in a port */
+#define PIN28_IDX                       28u   /*!< Pin number for pin 28 in a port */
+#define PIN29_IDX                       29u   /*!< Pin number for pin 29 in a port */
+#define PIN30_IDX                       30u   /*!< Pin number for pin 30 in a port */
+#define PIN31_IDX                       31u   /*!< Pin number for pin 31 in a port */
 
 #define SOPT5_UART0TXSRC_UART_TX      0x00u   /*!< UART 0 transmit data source select: UART0_TX pin */
 
@@ -57,19 +86,22 @@ BOARD_InitPins:
 - pin_list:
   - {pin_num: '62', peripheral: UART0, signal: RX, pin_signal: PTB16/SPI1_SOUT/UART0_RX/FTM_CLKIN0/FB_AD17/EWM_IN}
   - {pin_num: '63', peripheral: UART0, signal: TX, pin_signal: PTB17/SPI1_SIN/UART0_TX/FTM_CLKIN1/FB_AD16/EWM_OUT_b}
+  - {pin_num: '90', peripheral: ENET, signal: 'TMR_1588, 0', pin_signal: PTC16/UART3_RX/ENET0_1588_TMR0/FB_CS5_b/FB_TSIZ1/FB_BE23_16_BLS15_8_b}
+  - {pin_num: '91', peripheral: ENET, signal: 'TMR_1588, 1', pin_signal: PTC17/UART3_TX/ENET0_1588_TMR1/FB_CS4_b/FB_TSIZ0/FB_BE31_24_BLS7_0_b}
+  - {pin_num: '92', peripheral: ENET, signal: 'TMR_1588, 2', pin_signal: PTC18/UART3_RTS_b/ENET0_1588_TMR2/FB_TBST_b/FB_CS2_b/FB_BE15_8_BLS23_16_b}
+  - {pin_num: '54', peripheral: ENET, signal: RMII_MDC, pin_signal: ADC0_SE9/ADC1_SE9/PTB1/I2C0_SDA/FTM1_CH1/RMII0_MDC/MII0_MDC/FTM1_QD_PHB}
+  - {pin_num: '53', peripheral: ENET, signal: RMII_MDIO, pin_signal: ADC0_SE8/ADC1_SE8/PTB0/LLWU_P5/I2C0_SCL/FTM1_CH0/RMII0_MDIO/MII0_MDIO/FTM1_QD_PHA, slew_rate: fast,
+    open_drain: enable, drive_strength: low, pull_select: up, pull_enable: enable, passive_filter: disable}
+  - {pin_num: '42', peripheral: ENET, signal: RMII_RXD1, pin_signal: CMP2_IN0/PTA12/CAN0_TX/FTM1_CH0/RMII0_RXD1/MII0_RXD1/I2C2_SCL/I2S0_TXD0/FTM1_QD_PHA}
+  - {pin_num: '43', peripheral: ENET, signal: RMII_RXD0, pin_signal: CMP2_IN1/PTA13/LLWU_P4/CAN0_RX/FTM1_CH1/RMII0_RXD0/MII0_RXD0/I2C2_SDA/I2S0_TX_FS/FTM1_QD_PHB}
+  - {pin_num: '44', peripheral: ENET, signal: RMII_CRS_DV, pin_signal: PTA14/SPI0_PCS0/UART0_TX/RMII0_CRS_DV/MII0_RXDV/I2C2_SCL/I2S0_RX_BCLK/I2S0_TXD1}
+  - {pin_num: '45', peripheral: ENET, signal: RMII_TXEN, pin_signal: PTA15/SPI0_SCK/UART0_RX/RMII0_TXEN/MII0_TXEN/I2S0_RXD0}
+  - {pin_num: '47', peripheral: ENET, signal: RMII_TXD1, pin_signal: ADC1_SE17/PTA17/SPI0_SIN/UART0_RTS_b/RMII0_TXD1/MII0_TXD1/I2S0_MCLK}
+  - {pin_num: '46', peripheral: ENET, signal: RMII_TXD0, pin_signal: PTA16/SPI0_SOUT/UART0_CTS_b/UART0_COL_b/RMII0_TXD0/MII0_TXD0/I2S0_RX_FS/I2S0_RXD1}
+  - {pin_num: '39', peripheral: ENET, signal: RMII_RXER, pin_signal: PTA5/USB_CLKIN/FTM0_CH2/RMII0_RXER/MII0_RXER/CMP2_OUT/I2S0_TX_BCLK/JTAG_TRST_b}
+  - {pin_num: '55', peripheral: ADC0, signal: 'SE, 12', pin_signal: ADC0_SE12/PTB2/I2C0_SCL/UART0_RTS_b/ENET0_1588_TMR0/FTM0_FLT3}
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR THE PINS TOOL ***
-*/
-
-/*FUNCTION**********************************************************************
- * 
- * Function Name : BOARD_InitBootPins
- * Description   : Calls initialization functions.
- * 
- *END**************************************************************************/
-void BOARD_InitBootPins(void) {
-  BOARD_InitPins();
-}
-
+ */
 
 /*FUNCTION**********************************************************************
  *
@@ -78,14 +110,63 @@ void BOARD_InitBootPins(void) {
  *
  *END**************************************************************************/
 void BOARD_InitPins(void) {
+  CLOCK_EnableClock(kCLOCK_PortA);                           /* Port A Clock Gate Control: Clock enabled */
   CLOCK_EnableClock(kCLOCK_PortB);                           /* Port B Clock Gate Control: Clock enabled */
+  CLOCK_EnableClock(kCLOCK_PortC);                           /* Port C Clock Gate Control: Clock enabled */
+  CLOCK_EnableClock(kCLOCK_PortD);                           /* Port D Clock Gate Control: Clock enabled */
 
+  PORT_SetPinMux(PORTA, PIN12_IDX, kPORT_MuxAlt4);           /* PORTA12 (pin 42) is configured as RMII0_RXD1 */
+  PORT_SetPinMux(PORTA, PIN13_IDX, kPORT_MuxAlt4);           /* PORTA13 (pin 43) is configured as RMII0_RXD0 */
+  PORT_SetPinMux(PORTA, PIN14_IDX, kPORT_MuxAlt4);           /* PORTA14 (pin 44) is configured as RMII0_CRS_DV */
+  PORT_SetPinMux(PORTA, PIN15_IDX, kPORT_MuxAlt4);           /* PORTA15 (pin 45) is configured as RMII0_TXEN */
+  PORT_SetPinMux(PORTA, PIN16_IDX, kPORT_MuxAlt4);           /* PORTA16 (pin 46) is configured as RMII0_TXD0 */
+  PORT_SetPinMux(PORTA, PIN17_IDX, kPORT_MuxAlt4);           /* PORTA17 (pin 47) is configured as RMII0_TXD1 */
+  PORT_SetPinMux(PORTA, PIN5_IDX, kPORT_MuxAlt4);            /* PORTA5 (pin 39) is configured as RMII0_RXER */
+  const port_pin_config_t portb0_pin53_config = {
+    kPORT_PullUp,                                            /* Internal pull-up resistor is enabled */
+    kPORT_FastSlewRate,                                      /* Fast slew rate is configured */
+    kPORT_PassiveFilterDisable,                              /* Passive filter is disabled */
+    kPORT_OpenDrainEnable,                                   /* Open drain is enabled */
+    kPORT_LowDriveStrength,                                  /* Low drive strength is configured */
+    kPORT_MuxAlt4,                                           /* Pin is configured as RMII0_MDIO */
+    kPORT_UnlockRegister                                     /* Pin Control Register fields [15:0] are not locked */
+  };
+  PORT_SetPinConfig(PORTB, PIN0_IDX, &portb0_pin53_config);  /* PORTB0 (pin 53) is configured as RMII0_MDIO */
+  PORT_SetPinMux(PORTB, PIN1_IDX, kPORT_MuxAlt4);            /* PORTB1 (pin 54) is configured as RMII0_MDC */
+  PORT_SetPinMux(PORTB, PIN2_IDX, kPORT_PinDisabledOrAnalog); /* PORTB2 (pin 55) is configured as ADC0_SE12 */
   PORT_SetPinMux(PORTB, PIN16_IDX, kPORT_MuxAlt3);           /* PORTB16 (pin 62) is configured as UART0_RX */
   PORT_SetPinMux(PORTB, PIN17_IDX, kPORT_MuxAlt3);           /* PORTB17 (pin 63) is configured as UART0_TX */
+  PORT_SetPinMux(PORTC, PIN16_IDX, kPORT_MuxAlt4);           /* PORTC16 (pin 90) is configured as ENET0_1588_TMR0 */
+  PORT_SetPinMux(PORTC, PIN17_IDX, kPORT_MuxAlt4);           /* PORTC17 (pin 91) is configured as ENET0_1588_TMR1 */
+  PORT_SetPinMux(PORTC, PIN18_IDX, kPORT_MuxAlt4);           /* PORTC18 (pin 92) is configured as ENET0_1588_TMR2 */
   SIM->SOPT5 = ((SIM->SOPT5 &
     (~(SIM_SOPT5_UART0TXSRC_MASK)))                          /* Mask bits to zero which are setting */
       | SIM_SOPT5_UART0TXSRC(SOPT5_UART0TXSRC_UART_TX)       /* UART 0 transmit data source select: UART0_TX pin */
     );
+
+  PORT_SetPinMux(PORTC, PIN2_IDX, kPORT_MuxAsGpio);           /* PORTC2 (pin 72) is configured as PTC2 gpio */
+  PORT_SetPinMux(PORTC, PIN3_IDX, kPORT_MuxAsGpio);           /* PORTC3 (pin 73) is configured as PTC3 gpio */
+
+  PORT_SetPinMux(PORTA, PIN2_IDX, kPORT_MuxAsGpio);           /* PORTA2 (pin ??) is configured as PTA2 gpio */
+
+  PORT_SetPinMux(PORTB, PIN23_IDX, kPORT_MuxAsGpio);          /* PORTB23 (pin ??) is configured as PTA23 gpio */
+  PORT_SetPinMux(PORTA, PIN1_IDX, kPORT_MuxAsGpio);           /* PORTA1 (pin ??) is configured as PTA1 gpio */
+
+
+  PORT_SetPinMux(PORTD, PIN2_IDX, kPORT_MuxAlt3);             /* PORTD2 (pin 95) is configured as UART2_RX */
+  PORT_SetPinMux(PORTD, PIN3_IDX, kPORT_MuxAlt3);             /* PORTD3 (pin 96) is configured as UART2_TX */
+
+  PORT_SetPinMux(PORTC, PIN16_IDX, kPORT_MuxAsGpio);          /* PORTC16 is configured as kPORT_MuxAsGpio Pilot Cntl */
+  PORT_SetPinMux(PORTB, PIN18_IDX, kPORT_MuxAlt3);          /* PORTB18 is configured as kPORT_MuxAsGpio Pilot Cntl */
+  PORT_SetPinMux(PORTC, PIN1_IDX, kPORT_MuxAlt4);          /* PORTC1 is configured as kPORT_MuxAsGpio MCP3918 OSC */
+
+  PORT_SetPinMux(PORTC, PIN17_IDX, kPORT_MuxAsGpio);          /* PORTC17 is configured as kPORT_MuxAsGpio MCP3911 RESET */
+  PORT_SetPinMux(PORTB, PIN9_IDX, kPORT_MuxAsGpio);           /* PORTB9 is configured as kPORT_MuxAsGpio for MCP3911 data ready */
+
+  PORT_SetPinMux(PORTD, PIN0_IDX, kPORT_MuxAlt2);             /* PORTA4 is configured as kPORT_MuxAlt2 SPI0 CS0 */
+  PORT_SetPinMux(PORTD, PIN1_IDX, kPORT_MuxAlt2);             /* PORTA4 is configured as kPORT_MuxAlt2 SPI0 SCK */
+  PORT_SetPinMux(PORTD, PIN2_IDX, kPORT_MuxAlt2);             /* PORTA4 is configured as kPORT_MuxAlt2 SPI0 MOSI */
+  PORT_SetPinMux(PORTD, PIN3_IDX, kPORT_MuxAlt2);             /* PORTA4 is configured as kPORT_MuxAlt2 SPI0 MISO */
 }
 
 /*******************************************************************************

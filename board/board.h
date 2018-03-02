@@ -53,6 +53,28 @@
 #define BOARD_DEBUG_UART_BAUDRATE 115200
 #endif /* BOARD_DEBUG_UART_BAUDRATE */
 
+/* Define the port interrupt number for the board switches */
+#define BOARD_SW2_GPIO GPIOC
+#define BOARD_SW2_PORT PORTC
+#define BOARD_SW2_GPIO_PIN 6U
+#define BOARD_SW2_IRQ PORTC_IRQn
+#define BOARD_SW2_IRQ_HANDLER PORTC_IRQHandler
+#define BOARD_SW2_NAME "SW2"
+
+#define BOARD_SW3_GPIO GPIOA
+#define BOARD_SW3_PORT PORTA
+#define BOARD_SW3_GPIO_PIN 4U
+#define BOARD_SW3_IRQ PORTA_IRQn
+#define BOARD_SW3_IRQ_HANDLER PORTA_IRQHandler
+#define BOARD_SW3_NAME "SW3"
+
+#define LLWU_SW_GPIO BOARD_SW2_GPIO
+#define LLWU_SW_PORT BOARD_SW2_PORT
+#define LLWU_SW_GPIO_PIN BOARD_SW2_GPIO_PIN
+#define LLWU_SW_IRQ BOARD_SW2_IRQ
+#define LLWU_SW_IRQ_HANDLER BOARD_SW2_IRQ_HANDLER
+#define LLWU_SW_NAME BOARD_SW2_NAME
+
 /* Board led color mapping */
 #define LOGIC_LED_ON 0U
 #define LOGIC_LED_OFF 1U
@@ -133,6 +155,54 @@
 #if defined(__cplusplus)
 extern "C" {
 #endif /* __cplusplus */
+
+
+
+	/**
+	 * @note Configure MCP3911 communication
+	 */
+	/**< MCP3911 Data Ready Interrupt handler */
+#define IRQ_MCP3911_DATA_READY_HANDLER (PORTB_IRQHandler)
+	/**< MCP3911 Interrupt handler vector number */
+#define IRQ_MCP3911_DATA_READY_HANDLER_VECTOR (PORTB_IRQn)
+	/**< MCP3911 ADC SPI port communication */
+#define MCP3911_DSPI_BASEADDR (SPI0)
+	/**< MCP3911 Data Ready PORT input */
+#define MCP3911_DATA_READY_PORT (PORTB)
+	/**< MCP3911 Data Ready GPIO input */
+#define MCP3911_DATA_READY_GPIO (GPIOB)
+	/**< MCP3911 Data Ready GPIO PIN input */
+#define MCP3911_DATA_READY_GPIO_PIN (9u)
+	/**< MCP3911 Reset pin GPIO output */
+#define MCP3911_RESET_GPIO (GPIOC)
+	/**< MCP3911 Reset pin GPIO PIN output */
+#define MCP3911_RESET_GPIO_PIN (17u)
+
+	/**
+	 * @note configure Pilot Control
+	 * The Pilot Control will be managed by the FTM peripheral
+	 */
+#define PILOT_CNTL_FTM_BASEADDR (FTM2)
+#define PILOT_CNTL_FTM_CHANNEL (kFTM_Chnl_0)
+	/* Interrupt number and interrupt handler for the FTM instance used */
+#define IRQ_PILOT_CNTL_FTM_HANDLER_VECTOR (FTM2_IRQn)
+#define IRQ_PILOT_CNTL_FTM_HANDLER (FTM2_IRQHandler)
+
+#define MCP3911_OSC_FTM_BASEADDR (FTM0)
+#define MCP3911_OSC_FTM_CHANNEL (kFTM_Chnl_0)
+
+	/* Interrupt number and interrupt handler for the FTM instance used */
+#define IRQ_MCP3911_OSC_FTM_HANDLER_VECTOR (FTM0_IRQn)
+#define IRQ_MCP3911_OSC_FTM_HANDLER (FTM0_IRQHandler)
+	/* Interrupt to enable and flag to read; depends on the FTM channel used */
+#define FTM_CHANNEL_INTERRUPT_ENABLE kFTM_Chnl0InterruptEnable
+	//#define FTM_CHANNEL_FLAG kFTM_Chnl0Flag
+
+	/**< Pilot Control of voltage drive level GPIO output */
+#define PILOT_CNTL_GPIO (GPIOC)
+	/**< Pilot Control of voltage drive level GPIO output pin */
+#define PILOT_CNTL_GPIO_PIN (16U)
+
 
 /*******************************************************************************
  * API
