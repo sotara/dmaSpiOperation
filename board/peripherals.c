@@ -216,5 +216,5 @@ void BOARD_InitBootPeripherals(void)
 	InitializeSPI0();
 	InitializeRTC();
 	InitializeFTM0();
-	InitializeFTM2();
+//	InitializeFTM2();
 }
