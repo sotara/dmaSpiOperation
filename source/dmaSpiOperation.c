@@ -54,6 +54,19 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
+typedef enum _AdcTaskCommands_e
+{
+	eAdcCmdNull,
+	eAdcCmdConfigure,
+	eAdcCmdStartSampleData,
+	eAdcCmdStopSampleData,
+	eAdcCmdWriteRegCommand,
+	eAdcCmdReadRegCommand,
+}eAdcTaskCommands_t;
+
+#define ADC_Printf printf
+#define NUM_BUFFERS (2) // number of memory buffers to read from
+#define BUFFER_SIZE (256)
 #define MCP3911_GPIOC_DATA_READY_IRQ_PRIORITY_LEVEL (configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY +1)
 
 #define MCP3911_DSPI_MASTER_BASEADDR SPI0
@@ -66,16 +79,6 @@
 
 #define MCP3911_DSPI_MASTER_DMA_MUX_BASEADDR ((DMAMUX_Type *)(MCP3911_DSPI_MASTER_DMA_MUX_BASE))
 
-typedef enum _AdcTaskCommands_e
-{
-	eAdcCmdNull,
-	eAdcCmdConfigure,
-	eAdcCmdStartSampleData,
-	eAdcCmdStopSampleData,
-	eAdcCmdWriteRegCommand,
-	eAdcCmdReadRegCommand,
-}eAdcTaskCommands_t;
-
 #define WRITE (1)
 #define READ  (0)
 
@@ -85,10 +88,6 @@ typedef enum _AdcTaskCommands_e
 #define ADC_DIFF_CH1_BASE ADC1
 #define ADC_DIFF_CH1_GROUP 0U
 
-
-#define ADC_Printf printf
-#define NUM_BUFFERS (2) // number of memory buffers to read from
-#define BUFFER_SIZE (256)
 
 /*******************************************************************************
  * Variables
@@ -127,11 +126,29 @@ static uint8_t tl_MCP3911WriteCmd[eMCP3911WriteCmdSize];
 static dspi_master_edma_handle_t g_dspi_edma_m_handle;
 volatile bool isTransferCompleted = false;
 
+/*******************************************************************************
+ * Code
+ ******************************************************************************/
+
+/**
+ * @note This is to allow for communication from the FRDM-K64 to the MCP3911
+ * development board.
+ * http://www.microchip.com/DevelopmentTools/ProductDetails.aspx?PartNO=ard00385
+ * ( MCP3911 Single Phase Energy Meter Ref Design )
+ *
+ * The project will use the K64 SP0 bus (PTD0,PTD1,PTD2,PTD3) to jumper to
+ * the MCP3911 boards Test Points TP2,TP3,TP4,TP5 as follows:
+ *   CS - PTD0 <---> TP5
+ *  CLK - PTD1 <---> TP4
+ * MOSI - PTD2 <---> TP2
+ * MISO - PTD3 <---> TP3
+ * The series resistors have to be lifted (R58...R61)
+ */
+
 #define TRANSFER_SIZE 32U        /*!< SPI bus Transfer dataSize */
 uint8_t masterRxData[TRANSFER_SIZE] = {0U}; /**< SPI bus receive buffer */
 uint8_t masterTxData[TRANSFER_SIZE] = {0U}; /**< SPI bus transmit buffer */
 dspi_transfer_t masterXfer;
-edma_transfer_config_t mcp3911TransferCnfg;
 
 /**<
  * @brief structure used to handle the SPI bus communication tranfers
@@ -144,20 +161,15 @@ typedef struct MCP3911SpiTransfer_s
 	uint8_t trxComplete; /**< flag to signal the SPI transfer has been completed */
 	uint8_t dmaRequest; /**< @todo remove, debug flag is used to signal a dma request is to be made */
 	uint8_t fault; /**< @todo remove, debug flag is used signal fault problems, */
-	uint8_t dataReadyRequestFlag;
 }sMCP3911SpiTransfer_t;
 
 /** @TODO replace static definition here, this was made global to help debug
 static volatile sMCP3911SpiTransfer_t ts_Spi0Tranfer; */
-volatile sMCP3911SpiTransfer_t ts_MCP3911SpiTranfer = {0,0,0,1,0,0,0};
+volatile sMCP3911SpiTransfer_t ts_MCP3911SpiTranfer = {0,0,0,1,0,0};
 static volatile int32_t ts_SingleCmdCompleteFlag = 0;
 
 int32_t retStatusValues[25];
 int32_t retStatusValuesidx = 0;
-
-/*******************************************************************************
- * Code
- ******************************************************************************/
 
 static void DSPI_MasterTrigger()
 {
@@ -203,6 +215,7 @@ static void DSPI_MasterTrigger()
 
 }
 
+
 /**
  * @brief MCP3911 Data Ready IRQ Handler
  *
@@ -216,8 +229,10 @@ static void DSPI_MasterTrigger()
  */
 void IRQ_MCP3911_DATA_READY_HANDLER(void)
 {
+#define MCP3911_ADC_READ_SIZE (13)
 	uint32_t irqFlag;
-
+	int32_t status;
+	uint32_t primaskReg;
 	irqFlag = GPIO_GetPinsInterruptFlags(MCP3911_DATA_READY_GPIO);
 	if( irqFlag & (1U << MCP3911_DATA_READY_GPIO_PIN ))
 	{
@@ -226,6 +241,7 @@ void IRQ_MCP3911_DATA_READY_HANDLER(void)
 
 		DSPI_MasterTrigger();
 	}
+
 }
 
 
@@ -316,12 +332,8 @@ void DSPI_MasterUserCallback(SPI_Type *base, dspi_master_edma_handle_t *handle, 
 	ts_MCP3911SpiTranfer.dmaRequest = 0; /* clear flag to indicate that dma request is done */
     ts_SingleCmdCompleteFlag = 1;
 
-    if (ts_MCP3911SpiTranfer.dataReadyRequestFlag)
-    {
-//    	DSPI_MasterTrigger();
-    }
-
 }
+
 
 
 /**
@@ -550,11 +562,6 @@ static void mcp3911Task(void *pvParameters)
     DMAMUX_SetSource(MCP3911_DSPI_MASTER_DMA_MUX_BASEADDR, masterTxChannel, MCP3911_DSPI_MASTER_DMA_TX_REQUEST_SOURCE);
     DMAMUX_EnableChannel(MCP3911_DSPI_MASTER_DMA_MUX_BASEADDR, masterTxChannel);
 
-
-//    DMAMUX_SetSource(MCP3911_DSPI_MASTER_DMA_MUX_BASEADDR, masterIntermediaryChannel, kDmaRequestMux0PortB);
-//    DMAMUX_SetSource(MCP3911_DSPI_MASTER_DMA_MUX_BASEADDR, masterIntermediaryChannel, kDmaRequestMux0AlwaysOn63);
-
-
     /* Set up dspi master */
     memset(&(dspiEdmaMasterRxRegToRxDataHandle), 0, sizeof(dspiEdmaMasterRxRegToRxDataHandle));
     memset(&(dspiEdmaMasterTxDataToIntermediaryHandle), 0, sizeof(dspiEdmaMasterTxDataToIntermediaryHandle));
@@ -581,6 +588,11 @@ static void mcp3911Task(void *pvParameters)
     {
 //    	if( xTaskNotifyWait(0x00, 0xFFFFFFFF, &adcCmd, 1) == pdTRUE )
     	{
+        	/**
+        	 * @note Place breakpoint on the switch statement and provided the commands to configure and to start sampling.
+        	 * In the actual code, a CLI command would be used here to issue these commands that would signal the xTaskNotifyWait
+        	 * from above.
+        	 */
     		switch(adcCmd)
     		{
     			case eAdcCmdConfigure:
@@ -591,7 +603,7 @@ static void mcp3911Task(void *pvParameters)
     			case eAdcCmdStartSampleData:
     		    	ADC_Printf("eAdcCmdStartSampleData\r\n");
     			    EnableIRQ(IRQ_MCP3911_DATA_READY_HANDLER_VECTOR);
-    		    	ts_MCP3911SpiTranfer.dataReadyRequestFlag = 1;
+//    		    	ts_MCP3911SpiTranfer.dataReadyRequestFlag = 1;
 //    		    	PORT_SetPinInterruptConfig(MCP3911_DATA_READY_PORT, MCP3911_DATA_READY_GPIO_PIN, kPORT_DMARisingEdge);
 //    			    DMAMUX_SetSource(MCP3911_DSPI_MASTER_DMA_MUX_BASEADDR, masterTxChannel, kDmaRequestMux0PortB);
     			    DSPI_MasterTrigger();
@@ -604,7 +616,7 @@ static void mcp3911Task(void *pvParameters)
     			case eAdcCmdStopSampleData:
     		    	ADC_Printf("eAdcCmdStopSampleData\r\n");
     			    adcTaskState = eAdcCmdStopSampleData;
-    		    	ts_MCP3911SpiTranfer.dataReadyRequestFlag = 0;
+//    		    	ts_MCP3911SpiTranfer.dataReadyRequestFlag = 0;
     		    	PORT_SetPinInterruptConfig(MCP3911_DATA_READY_PORT, MCP3911_DATA_READY_GPIO_PIN, kPORT_InterruptRisingEdge);
     			    DMAMUX_SetSource(MCP3911_DSPI_MASTER_DMA_MUX_BASEADDR, masterTxChannel, MCP3911_DSPI_MASTER_DMA_TX_REQUEST_SOURCE);
 //    				DisableIRQ(IRQ_MCP3911_DATA_READY_HANDLER_VECTOR);
@@ -642,9 +654,9 @@ static void mcp3911Task(void *pvParameters)
     		{
     			qs_ADCOperation.DMADoneFlag = 0;
 
-    			memcpy(&adc0DataBuffer[adcDataBufferIdx*BUFFER_SIZE],qs_ADCOperation.adc0[qs_ADCOperation.bufferIdx],BUFFER_SIZE*sizeof(uint32_t));
-
-    			memcpy(&adc1DataBuffer[adcDataBufferIdx*BUFFER_SIZE],qs_ADCOperation.adc1[qs_ADCOperation.bufferIdx],BUFFER_SIZE*sizeof(uint32_t));
+//    			memcpy(&adc0DataBuffer[adcDataBufferIdx*BUFFER_SIZE],qs_ADCOperation.adc0[qs_ADCOperation.bufferIdx],BUFFER_SIZE*sizeof(uint32_t));
+//
+//    			memcpy(&adc1DataBuffer[adcDataBufferIdx*BUFFER_SIZE],qs_ADCOperation.adc1[qs_ADCOperation.bufferIdx],BUFFER_SIZE*sizeof(uint32_t));
 
     			adcDataBufferIdx++;
     			if(adcDataBufferIdx >= NUMBER_DATA_BUFFERS)
