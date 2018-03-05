@@ -50,6 +50,9 @@
 #include "fsl_dspi_edma.h"
 #include "fsl_port.h"
 
+#define USING_fsl_dspi_edma (0)
+
+dspi_master_handle_t g_m_handle;
 
 /*******************************************************************************
  * Definitions
@@ -192,7 +195,11 @@ static void DSPI_MasterTrigger()
 		masterXfer.dataSize = MCP3911_ADC_READ_SIZE;
 		masterXfer.configFlags = kDSPI_MasterCtar0 | MCP3911_DSPI_MASTER_PCS_FOR_TRANSFER | kDSPI_MasterPcsContinuous;
 
+#if USING_fsl_dspi_edma
 		status = DSPI_MasterTransferEDMA(MCP3911_DSPI_MASTER_BASEADDR, &g_dspi_edma_m_handle, &masterXfer);
+#else
+		status = DSPI_MasterTransferNonBlocking(MCP3911_DSPI_MASTER_BASEADDR, &g_m_handle, &masterXfer);
+#endif
 		if( status )
 		{
 			if( retStatusValuesidx < 25)
@@ -231,8 +238,7 @@ void IRQ_MCP3911_DATA_READY_HANDLER(void)
 {
 #define MCP3911_ADC_READ_SIZE (13)
 	uint32_t irqFlag;
-	int32_t status;
-	uint32_t primaskReg;
+
 	irqFlag = GPIO_GetPinsInterruptFlags(MCP3911_DATA_READY_GPIO);
 	if( irqFlag & (1U << MCP3911_DATA_READY_GPIO_PIN ))
 	{
@@ -253,7 +259,11 @@ void IRQ_MCP3911_DATA_READY_HANDLER(void)
  * being overwritten.
  *
  */
+#if USING_fsl_dspi_edma
 void DSPI_MasterUserCallback(SPI_Type *base, dspi_master_edma_handle_t *handle, status_t status, void *userData)
+#else
+void DSPI_MasterUserCallback(SPI_Type *base, dspi_master_handle_t *handle, status_t status, void *userData)
+#endif
 {
 	enum _AdcReadArray_e
 	{
@@ -399,7 +409,12 @@ static void SingleMCP3911TRX(uint8_t WriteFlag)
 		masterXfer.configFlags = kDSPI_MasterCtar0 | MCP3911_DSPI_MASTER_PCS_FOR_TRANSFER | kDSPI_MasterPcsContinuous;
 
 		ts_SingleCmdCompleteFlag = 0;
+#if USING_fsl_dspi_edma
 		status = DSPI_MasterTransferEDMA(MCP3911_DSPI_MASTER_BASEADDR, &g_dspi_edma_m_handle, &masterXfer);
+#else
+		status = DSPI_MasterTransferNonBlocking(MCP3911_DSPI_MASTER_BASEADDR, &g_m_handle, &masterXfer);
+
+#endif
 		assert( !status );
 		EnableGlobalIRQ(primaskReg);
 
@@ -412,6 +427,22 @@ static void SingleMCP3911TRX(uint8_t WriteFlag)
 
 }
 
+/**
+ * @brief set variables needed for a single MCP3911 write command
+ *
+ * @params RegAddr Internal register address
+ * @params DataByte1 data byte to write
+ * @params DataByte2 data byte to write
+ * @params NumDataBytes number of data bytes to write
+ * @return void
+ */
+static void SingleMCP3911Operation(uint8_t RegAddr, uint8_t DataByte1, uint8_t DataByte2, uint8_t NumDataBytes)
+{
+	tl_MCP3911WriteCmd[eMCP3911RegAddr] = RegAddr << 1; /** note register address must be shifted left 1 bit */
+	tl_MCP3911WriteCmd[eMCP3911DataByte1] = DataByte1;
+	tl_MCP3911WriteCmd[eMCP3911DataByte2] = DataByte2;
+	tl_MCP3911WriteCmd[eMCP3911NumberDataBytes] = NumDataBytes+1;
+}
 
 /**
  * @brief perform power up configuration of the MCP3911
@@ -509,22 +540,6 @@ static void ConfigureMCP3911()
 }
 
 
-/**
- * @brief set variables needed for a single MCP3911 write command
- *
- * @params RegAddr Internal register address
- * @params DataByte1 data byte to write
- * @params DataByte2 data byte to write
- * @params NumDataBytes number of data bytes to write
- * @return void
- */
-void SingleMCP3911Operation(uint8_t RegAddr, uint8_t DataByte1, uint8_t DataByte2, uint8_t NumDataBytes)
-{
-	tl_MCP3911WriteCmd[eMCP3911RegAddr] = RegAddr << 1; /** note register address must be shifted left 1 bit */
-	tl_MCP3911WriteCmd[eMCP3911DataByte1] = DataByte1;
-	tl_MCP3911WriteCmd[eMCP3911DataByte2] = DataByte2;
-	tl_MCP3911WriteCmd[eMCP3911NumberDataBytes] = NumDataBytes+1;
-}
 
 
 static void mcp3911Task(void *pvParameters)
@@ -533,15 +548,16 @@ static void mcp3911Task(void *pvParameters)
 	uint32_t adcCmd = 0,adcState=0;
 	uint32_t adcTaskState;
     uint32_t *adc0DataBuffer,*adc1DataBuffer,adcDataBufferIdx;
+#if USING_fsl_dspi_edma
     edma_handle_t dspiEdmaMasterRxRegToRxDataHandle;
     edma_handle_t dspiEdmaMasterTxDataToIntermediaryHandle;
     edma_handle_t dspiEdmaMasterIntermediaryToTxRegHandle;
     uint32_t masterRxChannel, masterIntermediaryChannel, masterTxChannel;
 
-
     masterRxChannel = 0U;
     masterIntermediaryChannel = 1U;
     masterTxChannel = 2U;
+#endif
 
     adc0DataBuffer = pvPortMalloc(BUFFER_SIZE*NUMBER_DATA_BUFFERS*sizeof(uint32_t));
     adc1DataBuffer = pvPortMalloc(BUFFER_SIZE*NUMBER_DATA_BUFFERS*sizeof(uint32_t));
@@ -552,6 +568,7 @@ static void mcp3911Task(void *pvParameters)
     qs_ADCOperation.dataIdx = 0;
     qs_ADCOperation.bufferIdx = 0;
 
+#if USING_fsl_dspi_edma
     /* DMA MUX init */
     DMAMUX_Init(MCP3911_DSPI_MASTER_DMA_MUX_BASEADDR);
 
@@ -577,7 +594,10 @@ static void mcp3911Task(void *pvParameters)
 										NULL, &dspiEdmaMasterRxRegToRxDataHandle,
 										&dspiEdmaMasterTxDataToIntermediaryHandle,
 										&dspiEdmaMasterIntermediaryToTxRegHandle);
+#else
+    DSPI_MasterTransferCreateHandle(MCP3911_DSPI_BASEADDR, &g_m_handle, DSPI_MasterUserCallback, NULL);
 
+#endif
 	/* Configure the PTC12 to generate IRQ on rising edge. */
 	PORT_SetPinInterruptConfig(MCP3911_DATA_READY_PORT, MCP3911_DATA_READY_GPIO_PIN, kPORT_InterruptRisingEdge);
 //	PORT_SetPinInterruptConfig(MCP3911_DATA_READY_PORT, MCP3911_DATA_READY_GPIO_PIN, kPORT_DMARisingEdge);
@@ -618,7 +638,7 @@ static void mcp3911Task(void *pvParameters)
     			    adcTaskState = eAdcCmdStopSampleData;
 //    		    	ts_MCP3911SpiTranfer.dataReadyRequestFlag = 0;
     		    	PORT_SetPinInterruptConfig(MCP3911_DATA_READY_PORT, MCP3911_DATA_READY_GPIO_PIN, kPORT_InterruptRisingEdge);
-    			    DMAMUX_SetSource(MCP3911_DSPI_MASTER_DMA_MUX_BASEADDR, masterTxChannel, MCP3911_DSPI_MASTER_DMA_TX_REQUEST_SOURCE);
+//    			    DMAMUX_SetSource(MCP3911_DSPI_MASTER_DMA_MUX_BASEADDR, masterTxChannel, MCP3911_DSPI_MASTER_DMA_TX_REQUEST_SOURCE);
 //    				DisableIRQ(IRQ_MCP3911_DATA_READY_HANDLER_VECTOR);
     				break;
     			case eAdcCmdWriteRegCommand:
