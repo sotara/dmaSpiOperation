@@ -178,6 +178,10 @@ extern "C" {
 	/**< MCP3911 Reset pin GPIO PIN output */
 #define MCP3911_RESET_GPIO_PIN (17u)
 
+#define PROFILE_GPIO (GPIOC)
+#define PROFILE_PIN_PTC3 (3u)
+#define PROFILE_PIN_PTC2 (2u)
+
 	/**
 	 * @note configure Pilot Control
 	 * The Pilot Control will be managed by the FTM peripheral

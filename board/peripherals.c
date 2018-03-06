@@ -68,6 +68,10 @@ static void InitializeSPI0()
     gpio_pin_config_t mcp3911Reset = {
         kGPIO_DigitalOutput, 0,
     };
+    gpio_pin_config_t profilePin = {
+        kGPIO_DigitalOutput, 0,
+    };
+
     gpio_pin_config_t mcp3911DataReady = {
     		kGPIO_DigitalInput, 0,
     };
@@ -97,6 +101,15 @@ static void InitializeSPI0()
     GPIO_PinInit(MCP3911_DATA_READY_GPIO, MCP3911_DATA_READY_GPIO_PIN, &mcp3911DataReady);
 
     GPIO_SetPinsOutput(MCP3911_RESET_GPIO, 1U << MCP3911_RESET_GPIO_PIN); /**< set reset pin high to take part out of reset */
+
+    /*
+     * configure profile pins that will measure time taken by SPI operations
+     */
+    GPIO_PinInit(PROFILE_GPIO, PROFILE_PIN_PTC3, &profilePin);
+    GPIO_PinInit(PROFILE_GPIO, PROFILE_PIN_PTC2, &profilePin);
+    GPIO_SetPinsOutput(PROFILE_GPIO, 1U << PROFILE_PIN_PTC3); /**< set pin to high state */
+    GPIO_SetPinsOutput(PROFILE_GPIO, 1U << PROFILE_PIN_PTC2); /**< set pin to high state */
+
 
     /*
      * set the SPI0 IRQ priority

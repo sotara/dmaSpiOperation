@@ -195,11 +195,13 @@ static void DSPI_MasterTrigger()
 		masterXfer.dataSize = MCP3911_ADC_READ_SIZE;
 		masterXfer.configFlags = kDSPI_MasterCtar0 | MCP3911_DSPI_MASTER_PCS_FOR_TRANSFER | kDSPI_MasterPcsContinuous;
 
+		GPIO_ClearPinsOutput(PROFILE_GPIO, 1U << PROFILE_PIN_PTC3); /**< set pin low */
 #if USING_fsl_dspi_edma
 		status = DSPI_MasterTransferEDMA(MCP3911_DSPI_MASTER_BASEADDR, &g_dspi_edma_m_handle, &masterXfer);
 #else
 		status = DSPI_MasterTransferNonBlocking(MCP3911_DSPI_MASTER_BASEADDR, &g_m_handle, &masterXfer);
 #endif
+	    GPIO_SetPinsOutput(PROFILE_GPIO, 1U << PROFILE_PIN_PTC3); /**< set pin high */
 		if( status )
 		{
 			if( retStatusValuesidx < 25)
@@ -612,6 +614,8 @@ static void mcp3911Task(void *pvParameters)
         	 * @note Place breakpoint on the switch statement and provided the commands to configure and to start sampling.
         	 * In the actual code, a CLI command would be used here to issue these commands that would signal the xTaskNotifyWait
         	 * from above.
+        	 * adcCmd == 1 for eAdcCmdConfigure
+        	 * adcCmd == 2 for eAdcCmdStartSampleData
         	 */
     		switch(adcCmd)
     		{
