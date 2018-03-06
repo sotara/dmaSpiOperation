@@ -50,7 +50,7 @@
 #include "fsl_dspi_edma.h"
 #include "fsl_port.h"
 
-#define USING_fsl_dspi_edma (0)
+#define USING_fsl_dspi_edma (1)
 
 dspi_master_handle_t g_m_handle;
 
